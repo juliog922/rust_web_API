@@ -1,24 +1,13 @@
+pub mod common;
+
 use reqwest::{blocking::Client, StatusCode};
 use serde_json::{json, Value};
 
-fn create_test_rustacean(client: &Client) -> Value {
-    let response = client.post("http://127.0.0.1:8000/rustaceans")
-        .json(&json!({
-            "name": "Foo bar",
-            "email" : "foo@bar.com"
-        }))
-        .send()
-        .unwrap();
-    assert_eq!(response.status(), StatusCode::CREATED);
-    response.json().unwrap()
-}
-
-fn delete_test_rustacean(client: &Client, rustacean: Value) {
-    let response = client.delete(format!("http://127.0.0.1:8000/rustaceans/{}", rustacean["id"]))
-        .send()
-        .unwrap();
-    assert_eq!(response.status(), StatusCode::NO_CONTENT);
-}
+use common::{
+    APP_HOST,
+    create_test_rustacean,
+    delete_test_rustacean
+};
 
 #[test]
 fn test_get_rustaceans() {
@@ -28,7 +17,7 @@ fn test_get_rustaceans() {
     let rustacean2: Value = create_test_rustacean(&client);
 
     // Test
-    let response = client.get("http://127.0.0.1:8000/rustaceans")
+    let response = client.get(format!("{}/rustaceans", APP_HOST))
         .send()
         .unwrap();
     assert_eq!(response.status(), StatusCode::OK);
@@ -48,7 +37,7 @@ fn test_create_rustacean() {
     // Setup
     let client = Client::new();
     // Test
-    let response = client.post("http://127.0.0.1:8000/rustaceans")
+    let response = client.post(format!("{}/rustaceans", APP_HOST))
         .json(&json!({
             "name": "Foo bar",
             "email" : "foo@bar.com"
@@ -75,7 +64,7 @@ fn test_view_rustacean() {
     let client = Client::new();
     let rustacean: Value = create_test_rustacean(&client);
 
-    let response = client.get(format!("http://127.0.0.1:8000/rustaceans/{}", rustacean["id"]))
+    let response = client.get(format!("{}/rustaceans/{}", APP_HOST, rustacean["id"]))
         .send()
         .unwrap();
     assert_eq!(response.status(), StatusCode::OK);
@@ -99,7 +88,7 @@ fn test_update_rustacean() {
     let client = Client::new();
     let rustacean: Value = create_test_rustacean(&client);
 
-    let response = client.put(format!("http://127.0.0.1:8000/rustaceans/{}", rustacean["id"]))
+    let response = client.put(format!("{}/rustaceans/{}", APP_HOST, rustacean["id"]))
         .json(&json!({
             "name": "Fooz bar",
             "email" : "fooz@bar.com"
@@ -123,10 +112,12 @@ fn test_update_rustacean() {
 
 #[test]
 fn test_delete_rustacean() {
+    // Setup
     let client = Client::new();
     let rustacean: Value = create_test_rustacean(&client);
 
-    let response = client.delete(format!("http://127.0.0.1:8000/rustaceans/{}", rustacean["id"]))
+    // Test
+    let response = client.delete(format!("{}/rustaceans/{}", APP_HOST, rustacean["id"]))
         .send()
         .unwrap();
     assert_eq!(response.status(), StatusCode::NO_CONTENT);
