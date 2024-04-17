@@ -95,6 +95,12 @@ fn test_view_crate() {
         "created_at": crate_a["created_at"]
     }));
 
+    // Test Not Found Error
+    let response = client.get(format!("{}/crates/{}", APP_HOST, 9999))
+        .send()
+        .unwrap();
+    assert_eq!(response.status(), StatusCode::NOT_FOUND);
+
     // Clean up
     delete_test_crate(&client, crate_a);
     delete_test_rustacean(&client, rustacean);
@@ -130,6 +136,19 @@ fn test_update_crate() {
         "description": "Test description Updated",
         "created_at": crate_a["created_at"]
     }));
+
+    // Test author-switching for a crate
+    let response = client.put(format!("{}/crates/{}", APP_HOST, crate_a["id"]))
+        .json(&json!({
+            "rustacean_id": 99999,
+            "code": "Barz",
+            "name": "Fooz",
+            "version": "Barz",
+            "description": "Test description Updated"
+        }))
+        .send()
+        .unwrap();
+    assert_eq!(response.status(), StatusCode::INTERNAL_SERVER_ERROR);
 
     // Cleanup
     delete_test_crate(&client, crate_a);

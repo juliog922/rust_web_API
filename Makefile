@@ -18,3 +18,7 @@ launch:
 
 test:
 	@ docker compose exec app cargo test
+	
+ping:
+	@ docker compose exec postgres psql -U postgres -d app_db -c "SELECT * FROM rustaceans;"
+	@ docker compose exec postgres psql -U postgres -d app_db -c "SELECT * FROM crates;"

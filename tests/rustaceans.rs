@@ -78,6 +78,12 @@ fn test_view_rustacean() {
         "created_at": rustacean["created_at"]
     }));
 
+    // Test Not Found Error
+    let response = client.get(format!("{}/rustaceans/{}", APP_HOST, 9999))
+        .send()
+        .unwrap();
+    assert_eq!(response.status(), StatusCode::NOT_FOUND);
+
     // Clean up
     delete_test_rustacean(&client, rustacean);
 }   
