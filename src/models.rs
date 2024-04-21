@@ -43,13 +43,11 @@ pub struct NewCrate {
     pub description: Option<String>
 }
 
-#[derive(Queryable, Serialize, Deserialize, Debug)]
+#[derive(Queryable, Debug, Identifiable)]
 pub struct User {
-    #[serde(skip_deserializing)]
     pub id: i32,
     pub username: String,
     pub password: String,
-    #[serde(skip_deserializing)]
     pub created_at: NaiveDateTime
 }
 
@@ -60,13 +58,11 @@ pub struct NewUser {
     pub password: String
 }
 
-#[derive(Queryable, Serialize, Deserialize)]
+#[derive(Queryable, Identifiable, Debug)]
 pub struct Role {
-    #[serde(skip_deserializing)]
     pub id: i32,
     pub code: String,
     pub name: String,
-    #[serde(skip_deserializing)]
     pub created_at: NaiveDateTime
 }
 
@@ -77,11 +73,11 @@ pub struct NewRole {
     pub name: String
 }
 
-#[derive(Queryable, Serialize, Deserialize)]
+#[derive(Queryable, Associations, Identifiable)]
 #[diesel(belongs_to(User))]
 #[diesel(belongs_to(Role))]
+#[diesel(table_name=users_roles)]
 pub struct UserRole {
-    #[serde(skip_deserializing)]
     pub id: i32,
     pub user_id: i32,
     pub role_id: i32

@@ -22,3 +22,6 @@ test:
 ping:
 	@ docker compose exec postgres psql -U postgres -d app_db -c "SELECT * FROM rustaceans;"
 	@ docker compose exec postgres psql -U postgres -d app_db -c "SELECT * FROM crates;"
+	@ docker compose exec postgres psql -U postgres -d app_db -c "SELECT * FROM users;"
+	@ docker compose exec postgres psql -U postgres -d app_db -c "SELECT * FROM roles;"
+	@ docker compose exec postgres psql -U postgres -d app_db -c "SELECT * FROM users_roles;"
