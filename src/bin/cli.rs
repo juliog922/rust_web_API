@@ -39,7 +39,7 @@ async fn main() {
                 sub_matches.get_one::<String>("password").unwrap().to_owned(),
                 sub_matches.get_many::<String>("roles").unwrap().map(|v| v.to_owned()).collect()
             ).await,
-            Some(("list", sub_matches)) => cr8s::commands::list_users().await,
+            Some(("list", _ )) => cr8s::commands::list_users().await,
             Some(("delete", sub_matches)) => cr8s::commands::delete_users(
                 sub_matches.get_one::<i32>("id").unwrap().to_owned()
             ).await,
