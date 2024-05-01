@@ -1,5 +1,6 @@
 use std::error::Error;
 
+pub mod authorizathion;
 pub mod rustaceans;
 pub mod crates;
 
