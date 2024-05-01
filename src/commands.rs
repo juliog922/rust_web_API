@@ -1,8 +1,9 @@
-use argon2::PasswordHasher;
-use argon2::password_hash::{SaltString, rand_core::OsRng};
 use diesel_async::{AsyncPgConnection, AsyncConnection};
 
-use crate::{models::NewUser, repositories::{UserRepository, RoleRepository}};
+use crate::{
+    models::NewUser,
+    repositories::{UserRepository, RoleRepository}, 
+    auth::hash_password};
 
 async fn load_db_connection() -> AsyncPgConnection {
     let database_url = std::env::var("DATABASE_URL")
@@ -15,9 +16,8 @@ async fn load_db_connection() -> AsyncPgConnection {
 pub async fn create_user(username: String, password: String, role_codes: Vec<String>) {
     let mut c = load_db_connection().await;
 
-    let salt = SaltString::generate(OsRng);
-    let argon2 = argon2::Argon2::default();
-    let password_hash = argon2.hash_password(password.as_bytes(), &salt).unwrap();
+    let password_hash = hash_password(password).unwrap();
+
     let new_user = NewUser {username, password: password_hash.to_string()};
     let user = UserRepository::create(&mut c, new_user, role_codes).await.unwrap();
     println!("User created {:?}", user);
