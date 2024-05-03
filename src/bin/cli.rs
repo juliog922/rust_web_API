@@ -30,6 +30,12 @@ async fn main() {
                         .arg(Arg::new("id").required(true).value_parser(value_parser!(i32)))
                 )
         )
+        .subcommand(
+            Command::new("digest-send")
+                .about("Send a digest with latest crates via email")
+                .arg(Arg::new("email").required(true))
+                .arg(Arg::new("hours_since").required(true).value_parser(value_parser!(i32)))   
+        )
         .get_matches();
 
     match matches.subcommand() {
@@ -45,6 +51,10 @@ async fn main() {
             ).await,
             _ => {}
         },
+        Some(("digest-send", sub_matches)) => cr8s::commands::digest_send(
+            sub_matches.get_one::<String>("email").unwrap().to_owned(),
+            sub_matches.get_one::<i32>("hours_since").unwrap().to_owned(),
+        ).await,
         _ => {},
     }
 
