@@ -1,6 +1,6 @@
 pub mod common;
 
-use reqwest::StatusCode;
+use reqwest:: {blocking::Client, StatusCode};
 use serde_json::{json, Value};
 
 use common::{
@@ -14,10 +14,11 @@ use common::{
 fn test_get_rustaceans() {
     // Setup
     let client = get_client_with_logged_in_admin();
+    
     let rustacean1: Value = create_test_rustacean(&client);
     let rustacean2: Value = create_test_rustacean(&client);
 
-    // Test
+    // Authorized Test
     let response = client.get(format!("{}/rustaceans", APP_HOST))
         .send()
         .unwrap();
@@ -26,6 +27,13 @@ fn test_get_rustaceans() {
     let json: Value = response.json().unwrap();
     assert!(json.as_array().unwrap().contains(&rustacean1));
     assert!(json.as_array().unwrap().contains(&rustacean2));
+
+    // Unauthorized Test
+    let unauthorized_client = Client::new();
+    let response = unauthorized_client.get(format!("{}/rustaceans", APP_HOST))
+        .send()
+        .unwrap();
+    assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
 
     // Cleanup
     delete_test_rustacean(&client, rustacean1);

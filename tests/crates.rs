@@ -1,6 +1,6 @@
 pub mod common;
 
-use reqwest:: StatusCode;
+use reqwest:: {blocking::Client, StatusCode};
 use serde_json::{json, Value};
 
 use common::{
@@ -20,15 +20,22 @@ fn test_get_crates() {
     let crate_a1: Value = create_test_crate(&client, &rustacean);
     let crate_a2: Value = create_test_crate(&client, &rustacean);
 
-    // Test
+    // Authorized Test
     let response = client.get(format!("{}/crates", APP_HOST))
         .send()
         .unwrap();
     assert_eq!(response.status(), StatusCode::OK);
-
+    
     let json: Value = response.json().unwrap();
     assert!(json.as_array().unwrap().contains(&crate_a1));
     assert!(json.as_array().unwrap().contains(&crate_a2));
+
+    // Unauthorized Test
+    let unauthorized_client = Client::new();
+    let response = unauthorized_client.get(format!("{}/crates", APP_HOST))
+        .send()
+        .unwrap();
+    assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
 
     // Cleanup
     delete_test_crate(&client, crate_a1);
