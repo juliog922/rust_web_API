@@ -1,17 +1,20 @@
 use std::error::Error;
+use rocket::Request;
+
+use rocket::http::Status;
+use rocket::request::{FromRequest, Outcome};
+use rocket::response::status::Custom;
+use rocket::serde::json::{json, Value};
+use rocket_db_pools::Connection;
+use rocket_db_pools::deadpool_redis::redis::AsyncCommands;
+
+use crate::models::{User, RoleCode};
+use crate::repositories::{UserRepository, RoleRepository};
 
 pub mod authorizathion;
-pub mod rustaceans;
 pub mod crates;
+pub mod rustaceans;
 
-use rocket::request::{Request, FromRequest, Outcome};
-use rocket::serde::json::{json, Value};
-use rocket::http::Status;
-use rocket::response::status::Custom;
-use rocket_db_pools::{deadpool_redis::redis::AsyncCommands, Connection};
-
-use crate::models::User;
-use crate::repositories::UserRepository;
 
 #[derive(rocket_db_pools::Database)]
 #[database("postgres")]
@@ -53,6 +56,35 @@ impl<'r> FromRequest<'r> for User {
             }
         }
 
+        Outcome::Error((Status::Unauthorized, ()))
+    }
+}
+
+pub struct  EditorUser(User);
+
+#[rocket::async_trait]
+impl<'r> FromRequest<'r> for EditorUser {
+    type Error = ();
+
+    async fn from_request(req: &'r Request<'_>) -> Outcome<Self, Self::Error> {
+        let user = req.guard::<User>().await
+            .expect("Cannot retrieve current logged in user");
+        let mut db = req.guard::<Connection<DbConn>>().await
+                .expect("Cannot connect to Postgres in request guard");
+
+        if let Ok(roles) = RoleRepository::find_by_user(&mut db, &user).await {
+            rocket::info!("Roles assigned are {:?}", roles);
+            let is_editor = roles.iter().any(|r| match r.code {
+                RoleCode::Admin => true,
+                RoleCode::Editor => true,
+                _ => false
+            });
+            rocket::info!("Is editor is {}", is_editor);
+
+            if is_editor {
+                return Outcome::Success(EditorUser(user));
+            }
+        }
         Outcome::Error((Status::Unauthorized, ()))
     }
 }

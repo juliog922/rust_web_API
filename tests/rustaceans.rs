@@ -7,7 +7,8 @@ use common::{
     APP_HOST,
     create_test_rustacean,
     delete_test_rustacean,
-    get_client_with_logged_in_admin
+    get_client_with_logged_in_viewer,
+    get_client_with_logged_in_admin,
 };
 
 #[test]
@@ -19,6 +20,7 @@ fn test_get_rustaceans() {
     let rustacean2: Value = create_test_rustacean(&client);
 
     // Authorized Test
+    let client = get_client_with_logged_in_viewer();
     let response = client.get(format!("{}/rustaceans", APP_HOST))
         .send()
         .unwrap();
@@ -36,6 +38,7 @@ fn test_get_rustaceans() {
     assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
 
     // Cleanup
+    let client = get_client_with_logged_in_admin();
     delete_test_rustacean(&client, rustacean1);
     delete_test_rustacean(&client, rustacean2);
 
@@ -73,6 +76,7 @@ fn test_view_rustacean() {
     let client = get_client_with_logged_in_admin();
     let rustacean: Value = create_test_rustacean(&client);
 
+    let client = get_client_with_logged_in_viewer();
     let response = client.get(format!("{}/rustaceans/{}", APP_HOST, rustacean["id"]))
         .send()
         .unwrap();
@@ -94,6 +98,7 @@ fn test_view_rustacean() {
     assert_eq!(response.status(), StatusCode::NOT_FOUND);
 
     // Clean up
+    let client = get_client_with_logged_in_admin();
     delete_test_rustacean(&client, rustacean);
 }   
 

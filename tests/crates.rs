@@ -9,7 +9,8 @@ use common::{
     create_test_crate,
     delete_test_rustacean,
     delete_test_crate,
-    get_client_with_logged_in_admin
+    get_client_with_logged_in_admin,
+    get_client_with_logged_in_viewer,
 };
 
 #[test]
@@ -21,6 +22,7 @@ fn test_get_crates() {
     let crate_a2: Value = create_test_crate(&client, &rustacean);
 
     // Authorized Test
+    let client = get_client_with_logged_in_viewer();
     let response = client.get(format!("{}/crates", APP_HOST))
         .send()
         .unwrap();
@@ -38,6 +40,7 @@ fn test_get_crates() {
     assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
 
     // Cleanup
+    let client = get_client_with_logged_in_admin();
     delete_test_crate(&client, crate_a1);
     delete_test_crate(&client, crate_a2);
     delete_test_rustacean(&client, rustacean);
@@ -86,6 +89,7 @@ fn test_view_crate() {
     let rustacean: Value = create_test_rustacean(&client);
     let crate_a: Value = create_test_crate(&client, &rustacean);
 
+    let client = get_client_with_logged_in_viewer();
     let response = client.get(format!("{}/crates/{}", APP_HOST, crate_a["id"]))
         .send()
         .unwrap();
@@ -110,6 +114,7 @@ fn test_view_crate() {
     assert_eq!(response.status(), StatusCode::NOT_FOUND);
 
     // Clean up
+    let client = get_client_with_logged_in_admin();
     delete_test_crate(&client, crate_a);
     delete_test_rustacean(&client, rustacean);
 }   
