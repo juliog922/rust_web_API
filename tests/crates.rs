@@ -1,6 +1,6 @@
 pub mod common;
 
-use reqwest::{blocking::Client, StatusCode};
+use reqwest:: StatusCode;
 use serde_json::{json, Value};
 
 use common::{
@@ -8,13 +8,14 @@ use common::{
     create_test_rustacean,
     create_test_crate,
     delete_test_rustacean,
-    delete_test_crate
+    delete_test_crate,
+    get_client_with_logged_in_admin
 };
 
 #[test]
 fn test_get_crates() {
     // Setup
-    let client = Client::new();
+    let client = get_client_with_logged_in_admin();
     let rustacean: Value = create_test_rustacean(&client);
     let crate_a1: Value = create_test_crate(&client, &rustacean);
     let crate_a2: Value = create_test_crate(&client, &rustacean);
@@ -38,7 +39,7 @@ fn test_get_crates() {
 #[test]
 fn test_create_crate() {
     // Setup
-    let client = Client::new();
+    let client = get_client_with_logged_in_admin();
     let rustacean: Value = create_test_rustacean(&client);
 
     // Test
@@ -74,7 +75,7 @@ fn test_create_crate() {
 #[test]
 fn test_view_crate() {
     // Setup
-    let client = Client::new();
+    let client = get_client_with_logged_in_admin();
     let rustacean: Value = create_test_rustacean(&client);
     let crate_a: Value = create_test_crate(&client, &rustacean);
 
@@ -109,7 +110,7 @@ fn test_view_crate() {
 #[test]
 fn test_update_crate() {
     // Setup
-    let client = Client::new();
+    let client = get_client_with_logged_in_admin();
     let rustacean: Value = create_test_rustacean(&client);
     let crate_a: Value = create_test_crate(&client, &rustacean);
 
@@ -158,7 +159,7 @@ fn test_update_crate() {
 #[test]
 fn test_delete_crate() {
     // Setup
-    let client = Client::new();
+    let client = get_client_with_logged_in_admin();
     let rustacean: Value = create_test_rustacean(&client);
     let crate_a: Value = create_test_crate(&client, &rustacean);
 
