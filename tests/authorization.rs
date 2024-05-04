@@ -2,8 +2,9 @@ pub mod common;
 
 use reqwest::{blocking::Client, StatusCode};
 use serde_json::{json, Value};
-
 use std::process::Command;
+
+use common::get_client_with_logged_in_viewer;
 
 #[test]
 fn test_login() {
@@ -47,4 +48,20 @@ fn test_login() {
         .send()
         .unwrap();
     assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
+}
+
+#[test]
+fn test_me() {
+    let client = get_client_with_logged_in_viewer();
+
+    let response = client.get(format!("{}/me", common::APP_HOST))
+        .send()
+        .unwrap();
+    assert_eq!(response.status(), StatusCode::OK);
+    let json: Value = response.json().unwrap();
+    assert!(json.get("id").is_some());
+    assert!(json.get("username").is_some());
+    assert_eq!(json["username"], "test_viewer");
+    assert!(json.get("created_at").is_some());
+    assert!(json.get("password").is_none());
 }
