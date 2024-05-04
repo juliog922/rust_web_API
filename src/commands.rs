@@ -1,11 +1,13 @@
 use std::str::FromStr;
 use chrono::{Datelike, Utc};
 use diesel_async::{AsyncPgConnection, AsyncConnection};
-use lettre::{message::{header::ContentType, MessageBuilder}, transport::smtp::authentication::Credentials, SmtpTransport, Transport};
 use tera::{Tera, Context};
 
 use crate::{
-    auth::hash_password, models::{NewUser, RoleCode}, repositories::{CrateRepository, RoleRepository, UserRepository}
+    auth::hash_password, 
+    mail::HtmlMailer, 
+    models::{NewUser, RoleCode}, 
+    repositories::{CrateRepository, RoleRepository, UserRepository}
 };
 
 fn load_template_engine() -> Tera{
@@ -54,20 +56,12 @@ pub async fn digest_send(email: String, hours_since: i32) {
 
     let crates = CrateRepository::find_since(&mut c, hours_since).await.unwrap();
     if crates.len() > 0 {
+        println!("Sending digest for {} crates", crates.len());
         let year = Utc::now().year();
         let mut context = Context::new();
         context.insert("crates", &crates);
         context.insert("year", &year);
-        let html_body = tera.render("email/digest.html", &context).unwrap();
-
-        let message = MessageBuilder::new()
-            .subject("Cr8s digest")
-            .from("Cr8s <noreply@cr8s.com".parse().unwrap())
-            .to(email.parse().unwrap())
-            .header(ContentType::TEXT_HTML)
-            .body(html_body)
-            .unwrap();
-
+        
         let smtp_host = std::env::var("SMTP_URL")
             .expect("Connot load SMTP host from enviroment");
         let smtp_username = std::env::var("SMTP_USERNAME")
@@ -75,11 +69,7 @@ pub async fn digest_send(email: String, hours_since: i32) {
         let smtp_password = std::env::var("SMTP_PASSWORD")
             .expect("Connot load SMTP password from enviroment");
 
-        let credentials = Credentials::new(smtp_username, smtp_password);
-        let mailer = SmtpTransport::relay(&smtp_host)
-            .unwrap()
-            .credentials(credentials)
-            .build();
-        mailer.send(&message).unwrap();
+        let mailer = HtmlMailer { template_engine: tera, smtp_host, smtp_username, smtp_password };
+        mailer.send(email, "email/digest.html", context).unwrap();
     }
 }
